@@ -5,7 +5,13 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-DISCORD_API_SECRET = os.getenv("DISCORD_API_TOKEN")
+class API:
+    DISCORD_TOKEN = os.getenv("DISCORD_API_TOKEN")
+    PREFIX = "!"
+
+class DEV:
+    DISCORD_TOKEN = os.getenv("DEV_TOKEN")
+    PREFIX = "."
 
 BASE_DIR = pathlib.Path(__file__).parent
 CMDS_DIR = BASE_DIR / "cmds"

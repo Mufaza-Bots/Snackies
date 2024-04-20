@@ -1,13 +1,14 @@
-import datetime
-from logging import Logger
 import settings
 import discord
 from discord.ext import commands, tasks
 
+
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix='!', intents=intents)
+build = settings.API
+
+bot = commands.Bot(command_prefix=build.PREFIX, intents=intents)
 
 async def is_moderator(ctx):
     for userRole in ctx.author.roles:
@@ -16,24 +17,37 @@ async def is_moderator(ctx):
                 return True
     return False
 
-@tasks.loop(hours=24)
+@tasks.loop(hours=2)
 async def cleanup():
     channel = bot.get_channel(settings.CHANNEL_ID)
-    messages = [msg async for msg in channel.history()]
-    await channel.delete_messages(messages=messages)
-    print("Cleanup ran")
+    messages = [None]
+    async for msg in channel.history():
+        if discord.utils.utcnow().day - msg.created_at.day > 0 or discord.utils.utcnow().day - msg.created_at.day < 0:
+            messages += [msg]
+    await channel.delete_messages(messages=messages[1:])
+    print(f"Cleanup ran [{discord.utils.utcnow()}]")
 
 @bot.event
 async def on_ready():
     print(f"[{bot.user}] has started")
+"""
+@bot.command(name="age")
+async def getAge(ctx, msgID: int):
+    message: discord.Message = await ctx.fetch_message(msgID)
     
     
-@bot.command()
-@commands.check(is_moderator)
-async def manualclean(ctx, channel: discord.TextChannel):
-    channel = bot.get_channel(channel.id)
-    messages = [msg async for msg in channel.history()]
-    await channel.delete_messages(messages=messages)
+    await ctx.send(f"Age of the message is: {discord.utils.utcnow().day}")
+"""    
+    
+@bot.command(name="mc")
+#@commands.check(is_moderator)
+async def manualclean(ctx):
+    channel = bot.get_channel(ctx.channel.id)
+    messages = [None]
+    async for msg in channel.history():
+        if discord.utils.utcnow().minute - msg.created_at.minute > 1 or discord.utils.utcnow().minute - msg.created_at.minute < -1:
+            messages += [msg]
+    await channel.delete_messages(messages=messages[1:])
 """
 @bot.command()
 async def time(ctx):
@@ -45,17 +59,18 @@ async def time(ctx):
     await ctx.send(boolcheck)"""
 
 @bot.command()
-@commands.check(is_moderator)
+#@commands.check(is_moderator)
 async def clean(ctx, arg: str):
+    cleanCH = bot.get_channel(settings.CHANNEL_ID)
     arg = arg.lower()
     if arg == "start":
         cleanup.start()
-        print(f"starting cleanup")
+        print(f"starting cleanup in #{cleanCH.name}")
     elif arg == "stop":
         cleanup.stop()
-        print(f"Stopping cleanup")
+        print(f"Stopping cleanup in #{cleanCH.name}")
     else:
         await ctx.send(f"Use either start or stop")
         
     
-bot.run(settings.DISCORD_API_SECRET)
+bot.run(build.DISCORD_TOKEN)  #change me
