@@ -33,14 +33,10 @@ async def cleanup():
 @bot.event
 async def on_ready():
     print(f"[{bot.user}] has started")
-"""
-@bot.command(name="age")
-async def getAge(ctx, msgID: int):
-    message: discord.Message = await ctx.fetch_message(msgID)
     
-    
-    await ctx.send(f"Age of the message is: {discord.utils.utcnow().day}")
-"""    
+    for cmdFile in settings.CMDS_DIR.glob("*.py"):
+        if cmdFile.name != "__init__.py":
+            await bot.load_extension(f"cmds.{cmdFile.name[:-3]}")
     
 @bot.command(name="mc")
 #@commands.check(is_moderator)
@@ -51,15 +47,6 @@ async def manualclean(ctx):
         if discord.utils.utcnow().minute - msg.created_at.minute > 1 or discord.utils.utcnow().minute - msg.created_at.minute < -1:
             messages += [msg]
     await channel.delete_messages(messages=messages[1:])
-"""
-@bot.command()
-async def time(ctx):
-    boolcheck = False
-    for role in ctx.author.roles:
-        if role.id == 890583013497380946:
-            boolcheck = True
-    
-    await ctx.send(boolcheck)"""
 
 @bot.command()
 #@commands.check(is_moderator)
@@ -76,4 +63,4 @@ async def clean(ctx, arg: str):
         await ctx.send(f"Use either start or stop")
         
     
-bot.run(build.DISCORD_TOKEN)  #change me
+bot.run(build.DISCORD_TOKEN)
