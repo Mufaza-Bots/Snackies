@@ -1,3 +1,4 @@
+import discord.ext
 import settings
 import discord
 from discord.ext import commands, tasks
@@ -6,7 +7,7 @@ from discord.ext import commands, tasks
 intents = discord.Intents.default()
 intents.message_content = True
 
-build = settings.API
+build = settings.DEV        #Change between .DEV and .API
 
 bot = commands.Bot(command_prefix=build.PREFIX, intents=intents)
 
@@ -20,12 +21,14 @@ async def is_moderator(ctx):
 @tasks.loop(hours=2)
 async def cleanup():
     channel = bot.get_channel(settings.CHANNEL_ID)
+    currentTime = discord.utils.utcnow()
     messages = [None]
     async for msg in channel.history():
-        if discord.utils.utcnow().day - msg.created_at.day > 0 or discord.utils.utcnow().day - msg.created_at.day < 0:
+        if (currentTime.date().toordinal() - msg.created_at.date().toordinal()) > 0:
             messages += [msg]
-    await channel.delete_messages(messages=messages[1:])
-    print(f"Cleanup ran [{discord.utils.utcnow()}]")
+    if messages[1] != None:
+        await channel.delete_messages(messages=messages[1:])
+        print(f"Cleanup ran [{currentTime}]")
 
 @bot.event
 async def on_ready():
