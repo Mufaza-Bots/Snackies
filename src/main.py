@@ -1,34 +1,6 @@
-import discord.ext
 import settings
-import discord
-from discord.ext import commands, tasks
 
-
-intents = discord.Intents.default()
-intents.message_content = True
-
-build = settings.DEV        #Change between .DEV and .API
-
-bot = commands.Bot(command_prefix=build.PREFIX, intents=intents)
-
-async def is_moderator(ctx):
-    for userRole in ctx.author.roles:
-        for serverRole in settings.MODERATOR_ROLE_ID_LIST:
-            if userRole.id == serverRole:
-                return True
-    return False
-
-@tasks.loop(hours=2)
-async def cleanup():
-    channel = bot.get_channel(settings.CHANNEL_ID)
-    currentTime = discord.utils.utcnow()
-    messages = [None]
-    async for msg in channel.history():
-        if (currentTime.date().toordinal() - msg.created_at.date().toordinal()) > 0:
-            messages += [msg]
-    if messages[1] != None:
-        await channel.delete_messages(messages=messages[1:])
-        print(f"Cleanup ran [{currentTime}]")
+bot = settings.getBot(messageContent=True)
 
 @bot.event
 async def on_ready():
@@ -37,30 +9,5 @@ async def on_ready():
     for cmdFile in settings.CMDS_DIR.glob("*.py"):
         if cmdFile.name != "__init__.py":
             await bot.load_extension(f"cmds.{cmdFile.name[:-3]}")
-    
-@bot.command(name="mc")
-#@commands.check(is_moderator)
-async def manualclean(ctx):
-    channel = bot.get_channel(ctx.channel.id)
-    messages = [None]
-    async for msg in channel.history():
-        if discord.utils.utcnow().minute - msg.created_at.minute > 1 or discord.utils.utcnow().minute - msg.created_at.minute < -1:
-            messages += [msg]
-    await channel.delete_messages(messages=messages[1:])
 
-@bot.command()
-#@commands.check(is_moderator)
-async def clean(ctx, arg: str):
-    cleanCH = bot.get_channel(settings.CHANNEL_ID)
-    arg = arg.lower()
-    if arg == "start":
-        cleanup.start()
-        print(f"starting cleanup in #{cleanCH.name}")
-    elif arg == "stop":
-        cleanup.stop()
-        print(f"Stopping cleanup in #{cleanCH.name}")
-    else:
-        await ctx.send(f"Use either start or stop")
-        
-    
-bot.run(build.DISCORD_TOKEN)
+bot.run(settings.BotConfig.token())
