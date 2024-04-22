@@ -1,12 +1,10 @@
-import settings
+import discord
+from cmds import test
 from discord.ext import commands
 
-intents = settings.INTENTS
-intents.message_content = True
+import discord.ext
 
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot
 
-@commands.command()
-async def test(ctx, *, args):
-    await ctx.send(cmds.test.check(args))
-bot.add_command(test)
+class Handler():
+    ...
