@@ -26,7 +26,7 @@ class DEV:
 """
 class BotConfig():
     global dev
-    dev = True
+    dev = False
     
     def prefix():
         if dev:
